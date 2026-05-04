@@ -1,27 +1,30 @@
-﻿<!DOCTYPE html>
+﻿
+<!-- const CSV_URL = 'https://raw.githubusercontent.com/Croissant2732/family-lunch-app/main/lunch_shops.csv';  -->
+    
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家族のランチ・ルーレット(CSV版)</title>
+    <title>家族のランチ・ルーレット</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f0f2f5; }
         .container { max-width: 450px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h2 { color: #333; }
-        .pick-btn { background: #ff4757; color: white; font-size: 1.3em; width: 100%; padding: 15px; border: none; border-radius: 50px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(255,71,87,0.3); }
-        .pick-btn:hover { background: #ff6b81; transform: translateY(-2px); }
-        #result { margin-top: 25px; padding: 20px; background: #fff9db; border-radius: 15px; border: 2px dashed #f1c40f; display: none; }
-        .shop-list-container { text-align: left; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
-        ul { list-style: none; padding: 0; color: #555; }
-        li { padding: 8px 0; border-bottom: 1px solid #fafafa; }
-        .info-text { font-size: 0.8em; color: #888; margin-bottom: 10px; }
+        .pick-btn { background: #ff4757; color: white; font-size: 1.3em; width: 100%; padding: 15px; border: none; border-radius: 50px; cursor: pointer; margin-bottom: 20px; }
+        .edit-btn { 
+            display: inline-block; background: #6e5494; color: white; text-decoration: none; 
+            padding: 10px 20px; border-radius: 5px; font-size: 0.9em; margin-top: 10px;
+        }
+        #result { margin-top: 20px; padding: 20px; background: #fff9db; border-radius: 15px; border: 2px dashed #f1c40f; display: none; }
+        .shop-list-container { text-align: left; margin-top: 30px; border-top: 1px solid #eee; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 8px 0; border-bottom: 1px solid #fafafa; color: #555; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>🍴 ランチ・ルーレット</h2>
-    <p class="info-text">※店名の編集はGitHubのCSVを直接書き換えてください</p>
 
     <button class="pick-btn" onclick="pickShops()">🚀 ランチに行く！</button>
 
@@ -30,34 +33,40 @@
         <div id="resultList"></div>
     </div>
 
+    <!-- CSV編集画面へのリンクボタン -->
+    <a id="editLink" href="#" target="_blank" class="edit-btn">📝 店名リストを編集する</a>
+
     <div class="shop-list-container">
-        <h3>登録店一覧（50音順）</h3>
+        <h3>登録店一覧</h3>
         <ul id="shopList">読み込み中...</ul>
     </div>
 </div>
 
 <script>
-    // ★ここをご自身の環境に合わせて書き換えてください
-    const CSV_URL = 'https://raw.githubusercontent.com/Croissant2732/family-lunch-app/main/lunch_shops.csv';
+    // --- 設定項目 ---
+    const USER = 'YOUR_GITHUB_USERNAME'; // GitHubユーザー名
+    const REPO = 'YOUR_REPO_NAME';       // リポジトリ名
+    const FILE = 'lunch_shops.csv';      // ファイル名
+    // ----------------
+
+    const CSV_RAW_URL = `https://raw.githubusercontent.com/Croissant2732/family-lunch-app/main/lunch_shops.csv`;
+    const GITHUB_EDIT_URL = `https://github.com/Croissant2732/family-lunch-app/edit/main/lunch_shops.csv`;
     
     let shops = [];
 
-    // CSVを読み込む関数
+    // 編集ボタンのURLをセット
+    document.getElementById('editLink').href = GITHUB_EDIT_URL;
+
     async function loadCSV() {
         try {
-            const response = await fetch(CSV_URL);
+            // キャッシュを回避するためにタイムスタンプを付与
+            const response = await fetch(`${CSV_RAW_URL}?t=${new Date().getTime()}`);
             const data = await response.text();
-            
-            // CSVを配列に変換（1行目はヘッダーなので除外）
             const rows = data.split('\n').map(row => row.trim()).filter(row => row !== "" && row !== "shop_name");
-            
-            // 50音・アルファベット順にソート
             shops = rows.sort((a, b) => a.localeCompare(b, 'ja'));
-            
             renderList();
         } catch (error) {
-            document.getElementById('shopList').innerText = "データの読み込みに失敗しました。";
-            console.error(error);
+            document.getElementById('shopList').innerText = "読み込み失敗。URL設定を確認してください。";
         }
     }
 
@@ -68,17 +77,15 @@
 
     function pickShops() {
         if (shops.length < 3) {
-            alert("CSVに3つ以上お店を登録してください！");
+            alert("お店を3つ以上登録してください！");
             return;
         }
         const shuffled = [...shops].sort(() => 0.5 - Math.random());
         const selected = shuffled.slice(0, 3);
-        
         const resultDiv = document.getElementById('result');
         const resultList = document.getElementById('resultList');
-        resultList.innerHTML = selected.map(s => `<p style="font-size:1.2em; font-weight:bold; margin:10px 0;">📍 ${s}</p>`).join('');
+        resultList.innerHTML = selected.map(s => `<p style="font-size:1.1em; font-weight:bold;">📍 ${s}</p>`).join('');
         resultDiv.style.display = 'block';
-        window.scrollTo(0, 0);
     }
 
     loadCSV();
